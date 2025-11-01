@@ -1,5 +1,4 @@
-# 🪖 Smart Miner Helmet – IoT Safety Monitoring System (Demo: www.miner-helmet.vercel.app)
-
+# 🪖 Smart Miner Helmet – IoT Safety Monitoring System [Demo] (https://miner-helmet.vercel.app/)
 > A complete IoT-based real-time monitoring system for miner safety using ESP8266, Firebase Realtime Database, and Next.js dashboard.
 
 ---
