@@ -15,6 +15,7 @@ export interface HelmetMap {
     // We'll also account for commands, even if we don't read it here
     commands?: {
       reset?: boolean;
+      emergency?: boolean;
     };
     // The history node is also present, but handled by a different page
     history?: any; 

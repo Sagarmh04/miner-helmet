@@ -50,6 +50,7 @@ export default function HelmetCard({ helmetId, data, onReset }: HelmetCardProps)
     );
   }
 
+  // emergency flag now comes from commands in parent component (prop data includes merged flag)
   const { temperature, latitude, longitude, timestamp, emergency } = data;
 
   const getStatus = () => {
@@ -149,9 +150,7 @@ export default function HelmetCard({ helmetId, data, onReset }: HelmetCardProps)
           <InfoRow
             icon={<MapPin className="h-4 w-4 text-brand-royal-violet" />}
             label="Location"
-            value={`${latitude?.toFixed(4) ?? "N/A"}, ${
-              longitude?.toFixed(4) ?? "N/A"
-            }`}
+            value={`${latitude?.toFixed(4) ?? "N/A"}, ${longitude?.toFixed(4) ?? "N/A"}`}
           />
           <InfoRow
             icon={<Clock className="h-4 w-4 text-muted-foreground" />}

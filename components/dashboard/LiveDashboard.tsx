@@ -18,7 +18,6 @@ export default function LiveDashboard() {
   const [tempAlert, setTempAlert] = useState<{ id: string; data: HelmetData } | null>(null);
   const [offlineAlert, setOfflineAlert] = useState<{ id: string; data: HelmetData } | null>(null);
 
-  // Track helmet online states
   const previousOnlineState = useRef<Record<string, boolean>>({});
   const hasLoadedOnce = useRef(false);
 
@@ -32,23 +31,36 @@ export default function LiveDashboard() {
     audioRef.current = audio;
   }, []);
 
-  // --- Realtime Database Listener ---
+  // --- Realtime Listener ---
   useEffect(() => {
     const helmetsRef = ref(db, "helmets");
 
-    const unsubscribe = onValue(helmetsRef, (snapshot) => {
-      const data: HelmetMap | null = snapshot.val();
-      setHelmets(data);
-      setLoading(false);
-
-      if (!data) {
+    const unsubscribe = onValue(helmetsRef, async (snapshot) => {
+      const rawData: HelmetMap | null = snapshot.val();
+      if (!rawData) {
+        setHelmets(null);
         setEmergencyAlert(null);
         setTempAlert(null);
         setOfflineAlert(null);
+        setLoading(false);
         return;
       }
 
-      const entries = Object.entries(data);
+      // Merge `commands.emergency` into `current` for display consistency
+      const mergedData: HelmetMap = {};
+      for (const [id, helmet] of Object.entries(rawData)) {
+        const current = helmet.current ?? {};
+        const emergencyFlag = helmet.commands?.emergency ?? false;
+        mergedData[id] = {
+          ...helmet,
+          current: { ...current, emergency: emergencyFlag },
+        };
+      }
+
+      setHelmets(mergedData);
+      setLoading(false);
+
+      const entries = Object.entries(mergedData);
       const now = Date.now();
 
       // --- Emergency Alert ---
@@ -101,14 +113,13 @@ export default function LiveDashboard() {
         const isOffline = diff > 2 && !helmet.current?.emergency;
         const wasOnline = previousOnlineState.current[id] ?? true;
 
-        // If newly offline → show alert
         if (isOffline && wasOnline) {
           setOfflineAlert({ id, data: helmet.current });
         }
 
         previousOnlineState.current[id] = !isOffline;
       }
-    }, 15000); // check every 15 sec
+    }, 15000);
 
     return () => clearInterval(interval);
   }, [helmets]);
@@ -119,7 +130,7 @@ export default function LiveDashboard() {
       const basePath = `helmets/${helmetId}`;
       const commandsPath = `${basePath}/commands`;
 
-      // Step 1: Overwrite current data with emergency:false
+      // Step 1: Overwrite current data (for instant UI toggle)
       const updatedCurrent = { ...currentData, emergency: false };
       await set(ref(db, `${basePath}/current`), updatedCurrent);
 
